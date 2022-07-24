@@ -1,0 +1,211 @@
+#### CentOS ####
+Instalar CentOS
+
+    Con usuario hadoop
+
+#### Instalar  framework Hadoop ####
+
+Descarga, el ejecutable binario del framework hadoop
+
+    https://hadoop.apache.org/releases.html
+
+Extraer el framewok hadoop, en la distribución linux CentOS
+
+    tar xvf /home/hadoop/Descarga/ hadoop-2.9.2.tar.gz
+
+#### JDK ####
+
+Instalar JDK
+	
+    rpm -ivh jdk-8u221-linux-x64.rpm
+    
+    permisos
+	chmod 777 jd...
+
+Seleccionar la version java, compatible con hadoop
+
+    alternatives --config java
+
+Configurar variable de de JAVA_HOME, en el archivo oculto
+    
+    --gedit .bashrc
+    
+    export HADOOP_HOME=/opt/hadoop
+    export JAVA_HOME=/usr/java/jdk1.8.0_221-amd64
+    export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+
+--ejecutar . ./.bashrc
+
+-- extraer con tar
+Ahora extraemos con el comando tar xvf /home/hadoop/Descargas/Hadoop-2.7.3.tar.gz
+Continuando movemos Hadoop-2.7.3 a opt/Hadoop con el comando mv
+
+permisos
+chown hadoop hadoop
+
+### HDFS ###
+
+
+    -- core-site.xml
+
+
+        <configuration>
+            <property>
+                <name>fs.defaultFS</name>
+                <value>hdfs://localhost:9000</value>    
+            </property>
+        </configuration>
+
+
+    ---hdfs-site.xml --------
+
+
+        <property>
+            <name>dfs.replication</name>
+            <value>1</value>    
+        </property>
+        <property>
+            <name>dfs.namenode.name.dir</name>
+            <value>/datos/namenode</value>    
+        </property>
+        <property>
+            <name>dfs.datanode.data.dir</name>
+            <value>/datos/datanode</value>    
+        </property>
+
+
+###### crear carpeta datos  ###### 
+
+        cd /
+        mkdir datos
+        cd datos
+        mkdir namenode
+        mkdir datanode
+        cd ..
+        chown -R hadoop:hadoop datos
+
+##### Protocolo de comunicacón SSH
+
+        ssh-keygen
+
+##### formatear namenode ##### 
+
+    hdfs namenode -format (para hadoop 2.10.x)
+    hadoop namenode -format (para hadoop 2.9.x)
+
+##### arrancamos hdfs  #######
+
+	cd /opt/hadoop/sbin
+	start-dfs.sh
+
+
+##### Configurar IP  #######
+
+Activar ip
+
+desactivar cortafuegos
+
+Nombre de cada nodo
+
+    -- gedit /etc/sysconfig/network
+    -- gedit /etc/hosts  OJO LA IP DE TU MAQUINA Y NOMBRE(NODO1)
+
+##### YARN
+
+
+            <property>
+                <name>mapreduce.framework.name</name>
+                <value>yarn</value>
+            </property>
+
+
+
+            <!-- Site specific YARN configuration properties -->
+            <property>
+                <name>yarn.resourcemanager.hostname</name>
+                <value>localhost</value>
+            </property>
+            <property>
+                <name>yarn.nodemanager.aux-services</name>
+                <value>mapreduce_shuffle</value>
+            </property>
+            <property>
+                <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+                <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+            </property>
+            
+
+#### Inicar HDFS y YARN
+
+en /opt/hadoop/sbin   
+
+
+     start-dfs.sh  (HDFS) 
+     start-yarn.sh (YARN) 
+
+###### Pseudo distribuido   SSH
+
+Eliminar el ssh
+
+    rm -rf 
+
+Generar un nuevi
+    ssh-keygen
+
+Pasar el archivo authorized_keys
+
+    cp id_rsa.pub authorized_keys
+    scp authorized_keys  nodo2:/home/hadoop/.ssh
+    cat id_rsa.pub >> authorized_keys
+
+Permisos al archivo
+
+    chmod 0600 authorized_keys
+
+
+### cluster real
+
+eliminar namenode de los esclavos
+    rm -rf namenode
+eliminar del datanode el current
+    rm -rf current
+
+    rm -rf datanode
+
+
+editar en el maestro
+    core-site.xml
+    yarn-site.xml
+
+    scp hdfs-site.xml nodo2:/opt/hadoop/etc/hadoop/
+
+    gedit slaves del maestro
+
+    /opt/hadoop/etc/hadoop/
+
+
+a formatear OJO HDFS NAMENODE -FORMAT
+
+    .ssh chmod 0600 authorized_keys
+
+hosts eliminados del hosts
+
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+
+####### Framework MapReduce
+
+
+---- hdfs dfs -mkdir /dirPrueba
+
+--- pasar el archivo a prueba_uno
+    hdfs dfs -put tradiciones_peruanas.txt /dirPrueba
+
+---- ejecutar mapreduce UBICANDONOS EN CD /OPT/HADOOP/SHARE/HADOOP/MAPREDUCE
+
+
+
+hadoop jar hadoop-mapreduce-examples-2.8.5.jar wordcount /dirPrueba/tradiciones_peruanas.txt /Salida_dirPrueba
+
